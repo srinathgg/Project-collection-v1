@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLACKSITE — AUTONOMOUS INTELLIGENCE PLATFORM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg: #010409;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --green: #00ff41;
+  --green-dim: #00cc33;
+  --green-dark: #003311;
+  --cyan: #00d4ff;
+  --cyan-dim: #0099bb;
+  --red: #ff0033;
+  --red-dim: #cc0022;
+  --yellow: #ffcc00;
+  --orange: #ff6600;
+  --glass: rgba(0,255,65,0.05);
+  --glass-border: rgba(0,255,65,0.15);
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Rajdhani', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--green);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ============ SCANLINES ============ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============ WATERMARK ============ */
+.watermark {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 8vw;
+  font-weight: 900;
+  color: rgba(0,255,65,0.03);
+  letter-spacing: 0.5em;
+  pointer-events: none;
+  z-index: 9998;
+  transform: rotate(-15deg);
+  user-select: none;
+}
+
+/* ============ LOGIN SCREEN ============ */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+
+.login-header {
+  text-align: center;
+  animation: fadeIn 1s ease;
+}
+
+.login-header h1 {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 30px var(--green), 0 0 60px var(--green-dim);
+  animation: pulse-glow 2s infinite;
+}
+
+.login-header p {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.5em;
+  margin-top: 8px;
+}
+
+.biometric-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.retina-scan {
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px var(--green-dim);
+}
+
+.retina-scan::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 1px solid var(--cyan);
+  border-radius: 50%;
+}
+
+.retina-scan::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--green);
+}
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  animation: scan-sweep 2s linear infinite;
+  border-radius: 50%;
+}
+
+.biometric-status {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--green-dim);
+  letter-spacing: 0.2em;
+  animation: blink 1s infinite;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 320px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-field label {
+  font-size: 0.7rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.2em;
+}
+
+.login-field input {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--green);
+  padding: 10px 15px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.login-field input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 10px rgba(0,255,65,0.2);
+}
+
+.login-btn {
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 12px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.login-btn:hover {
+  background: var(--green);
+  color: var(--bg);
+  box-shadow: 0 0 20px var(--green);
+}
+
+.login-access-level {
+  font-size: 0.65rem;
+  color: rgba(0,255,65,0.4);
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+
+/* ============ BOOT ANIMATION ============ */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 999;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--green);
+}
+
+.boot-text { opacity: 0; }
+.boot-text.show { animation: typeIn 0.1s forwards; }
+
+/* ============ MAIN DASHBOARD ============ */
+#dashboard {
+  display: none;
+  height: 100vh;
+  width: 100vw;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg);
+}
+
+/* ============ TOP BAR ============ */
+.top-bar {
+  height: 48px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.top-logo {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 10px var(--green);
+}
+
+.top-bar-nav {
+  display: flex;
+  gap: 2px;
+  margin-left: 20px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(0,255,65,0.5);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 6px 16px;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.top-bar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.7rem;
+}
+
+.threat-badge {
+  padding: 4px 12px;
+  border: 1px solid;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  animation: pulse-border 1.5s infinite;
+}
+
+.threat-badge.low { color: var(--green); border-color: var(--green); }
+.threat-badge.elevated { color: var(--yellow); border-color: var(--yellow); }
+.threat-badge.critical { color: var(--red); border-color: var(--red); animation: pulse-red 0.8s infinite; }
+
+.clock-display {
+  font-family: var(--font-mono);
+  color: var(--cyan-dim);
+  font-size: 0.75rem;
+}
+
+/* ============ ALERT BANNER ============ */
+.alert-banner {
+  height: 28px;
+  background: rgba(255,0,51,0.1);
+  border-bottom: 1px solid rgba(255,0,51,0.3);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 0.7rem;
+  color: var(--red);
+  letter-spacing: 0.15em;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.alert-scroll {
+  animation: scroll-left 20s linear infinite;
+  white-space: nowrap;
+}
+
+/* ============ CONTENT AREA ============ */
+.content-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  overflow: hidden;
+}
+
+/* ============ PANELS ============ */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-header {
+  height: 36px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  color: var(--cyan);
+  letter-spacing: 0.3em;
+}
+
+.panel-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 1.5s infinite;
+}
+
+/* ============ MODULE VIEWS ============ */
+.module-view { display: none; height: 100%; }
+.module-view.active { display: flex; flex-direction: column; }
+
+/* ============ GLOBE MODULE ============ */
+#globe-panel {
+  grid-row: 1 / 3;
+  position: relative;
+}
+
+#globe-canvas {
+  width: 100%;
+  height: calc(100% - 36px);
+}
+
+.globe-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background: linear-gradient(transparent, rgba(1,4,9,0.9));
+  display: flex;
+  gap: 15px;
+}
+
+.stat-box {
+  flex: 1;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.stat-box .val {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green);
+}
+
+.stat-box .lbl {
+  font-size: 0.6rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.2em;
+  margin-top: 2px;
+}
+
+.radar-overlay {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+}
+
+.radar-circle {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(0,255,65,0.3);
+  border-radius: 50%;
+}
+
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(rgba(0,255,65,0.4) 0deg, transparent 60deg, transparent 360deg);
+  animation: rotate 3s linear infinite;
+}
+
+/* ============ AI INTERROGATION ============ */
+#interrogation-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.stress-meter-container {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.stress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--cyan-dim);
+  margin-bottom: 6px;
+}
+
+.stress-bar {
+  height: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.stress-fill {
+  height: 100%;
+  width: 20%;
+  background: linear-gradient(90deg, var(--green), var(--yellow));
+  transition: width 0.5s ease, background 0.5s ease;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 8px 15px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 5px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: rgba(0,255,65,0.4);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: rgba(0,255,65,0.1);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.chat-log::-webkit-scrollbar { width: 4px; }
+.chat-log::-webkit-scrollbar-track { background: var(--bg); }
+.chat-log::-webkit-scrollbar-thumb { background: var(--green-dark); }
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  opacity: 0.6;
+}
+
+.msg.user .msg-label { color: var(--cyan); }
+.msg.ai .msg-label { color: var(--red); }
+
+.msg-text {
+  padding: 6px 10px;
+  border-left: 2px solid;
+  line-height: 1.5;
+}
+
+.msg.user .msg-text { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,0.05); }
+.msg.ai .msg-text { border-color: var(--red); color: rgba(255,200,200,0.9); background: rgba(255,0,51,0.05); }
+.msg.system .msg-text { border-color: var(--green-dim); color: var(--green-dim); font-size: 0.7rem; opacity: 0.8; }
+
+.chat-input-area {
+  border-top: 1px solid var(--glass-border);
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--green);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.chat-input:focus { border-color: var(--green); }
+
+.chat-send {
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-send:hover { background: var(--green); color: var(--bg); }
+
+/* ============ MISSION CONTROL ============ */
+#mission-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.mission-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+
+.agent-list {
+  border-right: 1px solid var(--glass-border);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.agent-list::-webkit-scrollbar { width: 3px; }
+.agent-list::-webkit-scrollbar-thumb { background: var(--green-dark); }
+
+.agent-card {
+  border: 1px solid var(--glass-border);
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--glass);
+}
+
+.agent-card:hover, .agent-card.selected {
+  border-color: var(--green);
+  background: rgba(0,255,65,0.07);
+}
+
+.agent-name {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--green);
+  letter-spacing: 0.1em;
+}
+
+.agent-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.agent-stat-bar {
+  flex: 1;
+}
+
+.agent-stat-bar .stat-name {
+  font-size: 0.55rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.1em;
+}
+
+.mini-bar {
+  height: 3px;
+  background: var(--bg3);
+  margin-top: 2px;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  background: var(--green);
+  transition: width 0.3s;
+}
+
+.agent-status {
+  font-size: 0.6rem;
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+}
+
+.status-available { color: var(--green); }
+.status-deployed { color: var(--yellow); }
+.status-compromised { color: var(--red); }
+
+.mission-panel-right {
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mission-panel-right::-webkit-scrollbar { width: 3px; }
+.mission-panel-right::-webkit-scrollbar-thumb { background: var(--green-dark); }
+
+.section-label {
+  font-size: 0.6rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.25em;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 5px;
+}
+
+.mission-select {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--green);
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  outline: none;
+  width: 100%;
+}
+
+.mission-select option { background: var(--bg2); }
+
+.prob-display {
+  text-align: center;
+  padding: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+}
+
+.prob-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--green);
+  text-shadow: 0 0 15px var(--green);
+}
+
+.prob-label {
+  font-size: 0.6rem;
+  color: var(--cyan-dim);
+  letter-spacing: 0.2em;
+}
+
+.deploy-btn {
+  background: transparent;
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  padding: 10px;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.deploy-btn:hover { background: var(--yellow); color: var(--bg); }
+.deploy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.countdown {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--red);
+  display: none;
+}
+
+.mission-log {
+  font-size: 0.68rem;
+  line-height: 1.6;
+  color: rgba(0,255,65,0.7);
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.chart-container {
+  height: 80px;
+  position: relative;
+}
+
+/* ============ TERMINAL MODULE ============ */
+#terminal-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.8;
+  color: var(--green);
+  background: #000;
+}
+
+.terminal-body::-webkit-scrollbar { width: 4px; }
+.terminal-body::-webkit-scrollbar-thumb { background: var(--green-dark); }
+
+.term-line { animation: fadeIn 0.1s ease; }
+.term-line.cmd { color: var(--green); }
+.term-line.out { color: rgba(0,255,65,0.8); }
+.term-line.err { color: var(--red); }
+.term-line.info { color: var(--cyan); }
+.term-line.warn { color: var(--yellow); }
+.term-line.root { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; }
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-top: 1px solid var(--glass-border);
+  background: #000;
+  flex-shrink: 0;
+}
+
+.term-prompt {
+  color: var(--green);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  outline: none;
+  caret-color: var(--green);
+}
+
+/* ============ THREAT EVENTS FEED ============ */
+.events-feed {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.event-item {
+  background: rgba(1,4,9,0.9);
+  border-left: 3px solid;
+  padding: 5px 8px;
+  font-size: 0.65rem;
+  animation: slideIn 0.3s ease;
+  opacity: 0.95;
+}
+
+.event-item.low { border-color: var(--green); color: var(--green); }
+.event-item.elevated { border-color: var(--yellow); color: var(--yellow); }
+.event-item.critical { border-color: var(--red); color: var(--red); }
+
+.event-time { opacity: 0.6; margin-right: 5px; }
+
+/* ============ INTEL MODAL ============ */
+.intel-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+
+.intel-modal.open { display: flex; }
+
+.intel-modal-box {
+  width: 480px;
+  background: var(--bg2);
+  border: 1px solid var(--green);
+  box-shadow: 0 0 40px rgba(0,255,65,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.intel-modal-header {
+  background: var(--bg3);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.intel-modal-header h3 {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--cyan);
+  letter-spacing: 0.2em;
+}
+
+.intel-modal-close {
+  background: none;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.intel-modal-body {
+  padding: 20px;
+  font-size: 0.78rem;
+  line-height: 1.8;
+  color: rgba(0,255,65,0.8);
+}
+
+.intel-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+  padding: 6px 0;
+}
+
+.intel-row .key { color: var(--cyan-dim); font-size: 0.7rem; letter-spacing: 0.15em; }
+.intel-row .val { color: var(--green); }
+
+/* ============ ANIMATIONS ============ */
+@keyframes pulse-glow {
+  0%, 100% { text-shadow: 0 0 20px var(--green), 0 0 40px var(--green-dim); }
+  50% { text-shadow: 0 0 40px var(--green), 0 0 80px var(--green-dim), 0 0 120px var(--green); }
+}
+
+@keyframes scan-sweep {
+  0% { transform: translateY(-60px); opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { transform: translateY(60px); opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scroll-left {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 8px currentColor; }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; box-shadow: 0 0 15px var(--red); }
+  50% { opacity: 0.7; box-shadow: none; }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--green-dark); }
+
+/* Panel layout fixes */
+#globe-panel { overflow: hidden; }
+#globe-panel .panel-header { position: absolute; top: 0; left: 0; right: 0; z-index: 10; }
+
+.right-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#interrogation-panel, #mission-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+</style>
+</head>
+<body>
+
+<div class="watermark">CLASSIFIED</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-header">
+    <h1>BLACKSITE</h1>
+    <p>AUTONOMOUS INTELLIGENCE PLATFORM — LEVEL 5 ACCESS</p>
+  </div>
+  
+  <div class="biometric-container">
+    <div class="retina-scan">
+      <div class="scan-line"></div>
+    </div>
+    <div class="biometric-status" id="bio-status">SCANNING BIOMETRICS...</div>
+  </div>
+  
+  <div class="login-form">
+    <div class="login-field">
+      <label>OPERATOR ID</label>
+      <input type="text" id="login-user" placeholder="ENTER OPERATOR ID" value="OPERATOR_ALPHA">
+    </div>
+    <div class="login-field">
+      <label>AUTHORIZATION CODE</label>
+      <input type="password" id="login-pass" placeholder="████████████" value="********">
+    </div>
+    <button class="login-btn">AUTHENTICATE — ENTER SYSTEM</button>
+  </div>
+  
+  <div class="login-access-level">FACILITY: CLASSIFIED // CLEARANCE REQUIRED // UNAUTHORIZED ACCESS PROSECUTED</div>
+</div>
+
+<!-- BOOT SCREEN -->
+<div id="boot-screen" id="boot-screen">
+  <div id="boot-content"></div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="dashboard">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-logo">⬢ BLACKSITE</div>
+    <div class="top-bar-nav">
+      <button class="nav-btn active">THREAT INTEL</button>
+      <button class="nav-btn">AI INTERROGATION</button>
+      <button class="nav-btn">MISSION CONTROL</button>
+      <button class="nav-btn">SECURE TERMINAL</button>
+    </div>
+    <div class="top-bar-right">
+      <div class="threat-badge low" id="global-threat-badge">THREAT: LOW</div>
+      <div class="clock-display" id="clock">00:00:00 UTC</div>
+      <span style="font-size:0.7rem;color:var(--cyan-dim)">OPR: OPERATOR_ALPHA</span>
+    </div>
+  </div>
+  
+  <!-- ALERT BANNER -->
+  <div class="alert-banner">
+    <div class="alert-scroll" id="alert-scroll">
+      ⚠ BLACKSITE ACTIVE — ALL COMMUNICATIONS ENCRYPTED — MONITOR ACTIVE THREATS — MISSION OPERATIONS IN PROGRESS — BIOMETRIC LOCK ENGAGED — SATELLITE UPLINK STABLE — AI CORES ONLINE ⚠
+    </div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area" style="height:calc(100vh - 76px);">
+    
+    <!-- GLOBE PANEL (LEFT, SPANS FULL HEIGHT) -->
+    <div class="panel" id="globe-panel">
+      <div class="panel-header">
+        <div class="panel-indicator"></div>
+        <div class="panel-title">GLOBAL THREAT INTELLIGENCE ENGINE</div>
+      </div>
+      <canvas id="globe-canvas"></canvas>
+      
+      <!-- Events Feed -->
+      <div class="events-feed" id="events-feed"></div>
+      
+      <!-- Radar -->
+      <div class="radar-overlay" style="top:50px;right:20px;">
+        <div class="radar-circle"></div>
+        <div class="radar-circle" style="inset:15px;"></div>
+        <div class="radar-circle" style="inset:30px;"></div>
+        <div class="radar-sweep"></div>
+      </div>
+      
+      <!-- Globe Stats -->
+      <div class="globe-overlay">
+        <div class="stat-box">
+          <div class="val" id="stat-attacks">0</div>
+          <div class="lbl">ACTIVE THREATS</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-countries">0</div>
+          <div class="lbl">COUNTRIES MONITORED</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-intercepts">0</div>
+          <div class="lbl">INTERCEPTS TODAY</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-agents">0</div>
+          <div class="lbl">AGENTS DEPLOYED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANELS -->
+    <div class="right-panels">
+      
+      <!-- AI INTERROGATION PANEL -->
+      <div class="panel" id="interrogation-panel" style="height:50%">
+        <div class="panel-header">
+          <div class="panel-indicator" style="background:var(--red); box-shadow: 0 0 6px var(--red);"></div>
+          <div class="panel-title">AI INTERROGATION SYSTEM</div>
+        </div>
+        
+        <div class="stress-meter-container">
+          <div class="stress-label">
+            <span>SUBJECT STRESS LEVEL</span>
+            <span id="stress-val">20%</span>
+          </div>
+          <div class="stress-bar">
+            <div class="stress-fill" id="stress-fill"></div>
+          </div>
+        </div>
+        
+        <div class="mode-toggle">
+          <button class="mode-btn active">FRIENDLY</button>
+          <button class="mode-btn">NEUTRAL</button>
+          <button class="mode-btn">AGGRESSIVE</button>
+          <button class="mode-btn">PSYCHE</button>
+        </div>
+        
+        <div class="chat-log" id="chat-log">
+          <div class="msg system">
+            <div class="msg-text">// BLACKSITE AI INTERROGATION SYSTEM ONLINE — SESSION ACTIVE — SUBJECT CONNECTED</div>
+          </div>
+          <div class="msg ai">
+            <div class="msg-label">▶ BLACKSITE AI</div>
+            <div class="msg-text">Good morning, Operator. Interrogation subject is secured. I am ready to assist with the session. What is your first directive?</div>
+          </div>
+        </div>
+        
+        <div class="chat-input-area">
+          <input class="chat-input" id="chat-input" placeholder="ENTER INTERROGATION DIRECTIVE...">
+          <button class="chat-send">TRANSMIT</button>
+        </div>
+      </div>
+
+      <!-- MISSION CONTROL PANEL -->
+      <div class="panel" id="mission-panel" style="height:50%">
+        <div class="panel-header">
+          <div class="panel-indicator" style="background:var(--yellow); box-shadow: 0 0 6px var(--yellow);"></div>
+          <div class="panel-title">MISSION CONTROL SIMULATOR</div>
+        </div>
+        
+        <div class="mission-body">
+          <!-- Agent List -->
+          <div class="agent-list" id="agent-list"></div>
+          
+          <!-- Mission Panel -->
+          <div class="mission-panel-right">
+            <div class="section-label">MISSION ASSIGNMENT</div>
+            
+            <select class="mission-select" id="mission-select">
+              <option value="recon">RECON: SHADOW PROTOCOL</option>
+              <option value="extraction">EXTRACTION: GHOST OPERATIVE</option>
+              <option value="sabotage">SABOTAGE: IRON CURTAIN</option>
+              <option value="infiltration">INFILTRATION: DEEP COVER</option>
+              <option value="elimination">ELIMINATION: BLACK KNIFE</option>
+            </select>
+            
+            <div class="prob-display">
+              <div class="prob-value" id="prob-value">—</div>
+              <div class="prob-label">SUCCESS PROBABILITY</div>
+            </div>
+            
+            <div class="chart-container">
+              <canvas id="prob-chart"></canvas>
+            </div>
+            
+            <button class="deploy-btn" id="deploy-btn" disabled>SELECT AGENT TO DEPLOY</button>
+            
+            <div class="countdown" id="countdown">MISSION IN PROGRESS: <span id="count-time">00:30</span></div>
+            
+            <div class="mission-log" id="mission-log">// MISSION LOG READY...</div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- TERMINAL OVERLAY -->
+<div id="terminal-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:var(--bg);flex-direction:column;">
+  <div class="panel-header" style="flex-shrink:0;">
+    <div class="panel-indicator" style="background:#00ff41;"></div>
+    <div class="panel-title">SECURE TERMINAL — BLACKSITE OS v4.2</div>
+    <button id="terminal-close-btn" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:0.8rem;letter-spacing:0.2em;">[ CLOSE ]</button>
+  </div>
+  <div class="terminal-body" id="terminal-body"></div>
+  <div class="terminal-input-row">
+    <span class="term-prompt" id="term-prompt">BLACKSITE@SECURE:~$</span>
+    <input class="term-input" id="term-input" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<!-- INTEL MODAL -->
+<div class="intel-modal" id="intel-modal">
+  <div class="intel-modal-box">
+    <div class="intel-modal-header">
+      <h3>INTELLIGENCE REPORT — CLASSIFIED</h3>
+      <button class="intel-modal-close">✕</button>
+    </div>
+    <div class="intel-modal-body" id="intel-modal-body"></div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// GLOBAL STATE
+// =============================================
+const STATE = {
+  threatLevel: 'low',
+  activeThreats: 0,
+  intercepts: 0,
+  deployedAgents: 0,
+  stressLevel: 20,
+  interrogationMode: 'friendly',
+  selectedAgent: null,
+  missionActive: false,
+  rootAccess: false,
+  termHistory: [],
+  termHistIdx: -1,
+};
+
+const COUNTRIES = [
+  {name:'USA',lat:38,lng:-97,code:'US'},{name:'Russia',lat:55,lng:37,code:'RU'},
+  {name:'China',lat:35,lng:105,code:'CN'},{name:'Germany',lat:51,lng:10,code:'DE'},
+  {name:'UK',lat:54,lng:-2,code:'GB'},{name:'France',lat:46,lng:2,code:'FR'},
+  {name:'Brazil',lat:-15,lng:-47,code:'BR'},{name:'India',lat:20,lng:77,code:'IN'},
+  {name:'Japan',lat:37,lng:138,code:'JP'},{name:'Australia',lat:-25,lng:133,code:'AU'},
+  {name:'Canada',lat:56,lng:-96,code:'CA'},{name:'Mexico',lat:23,lng:-102,code:'MX'},
+  {name:'Egypt',lat:26,lng:30,code:'EG'},{name:'Nigeria',lat:9,lng:8,code:'NG'},
+  {name:'Iran',lat:32,lng:53,code:'IR'},{name:'N.Korea',lat:40,lng:127,code:'KP'},
+];
+
+const THREAT_EVENTS = [
+  'Cyber intrusion detected: {from} → {to}',
+  'Encrypted transmission intercepted: {from}',
+  'SIGINT activity elevated: {from} sector',
+  'DDoS vector identified: {from} origin',
+  'Malware propagation: {from} → {to}',
+  'Zero-day exploit: {from} networks',
+  'Data exfiltration attempt: {from}',
+  'Satellite link interference: {from}',
+];
+
+const AGENTS = [
+  {id:'A-001',name:'GHOST',skill:92,stealth:88,intel:75,loyalty:95,status:'available'},
+  {id:'A-002',name:'CIPHER',skill:78,stealth:95,intel:90,loyalty:80,status:'available'},
+  {id:'A-003',name:'WRAITH',skill:85,stealth:70,intel:95,loyalty:88,status:'available'},
+  {id:'A-004',name:'VIPER',skill:90,stealth:60,intel:65,loyalty:72,status:'deployed'},
+  {id:'A-005',name:'NOVA',skill:70,stealth:85,intel:80,loyalty:98,status:'available'},
+];
+
+// =============================================
+// LOGIN & BOOT
+// =============================================
+function initiateLogin() {
+  const screen = document.getElementById('login-screen');
+  const boot = document.getElementById('boot-screen');
+  
+  screen.style.opacity = '0';
+  screen.style.transition = 'opacity 0.5s';
+  
+  setTimeout(() => {
+    screen.style.display = 'none';
+    boot.style.display = 'flex';
+    runBootSequence();
+  }, 500);
+}
+
+const BOOT_LINES = [
+  {t:'', delay:100},
+  {t:'BLACKSITE OS v4.2.1 — INITIALIZATION SEQUENCE', delay:200},
+  {t:'Copyright © CLASSIFIED — All rights reserved', delay:100},
+  {t:'', delay:200},
+  {t:'[  OK  ] Loading kernel modules...', delay:150},
+  {t:'[  OK  ] Mounting encrypted filesystem...', delay:120},
+  {t:'[  OK  ] Establishing secure comms...', delay:180},
+  {t:'[  OK  ] Satellite uplink: STABLE', delay:100},
+  {t:'[  OK  ] Biometric subsystem: ONLINE', delay:120},
+  {t:'[  OK  ] Neural threat engine: LOADING...', delay:300},
+  {t:'[  OK  ] Neural threat engine: ONLINE', delay:100},
+  {t:'[  OK  ] AI interrogation cores: ACTIVE', delay:150},
+  {t:'[  OK  ] Global surveillance grid: CONNECTED', delay:200},
+  {t:'[  OK  ] Agent management system: READY', delay:100},
+  {t:'[  OK  ] Crypto vault: SEALED', delay:100},
+  {t:'', delay:200},
+  {t:'Verifying operator credentials...', delay:300},
+  {t:'OPERATOR_ALPHA — CLEARANCE LEVEL: 5 — AUTHORIZED', delay:200},
+  {t:'', delay:100},
+  {t:'████████████████████████████████ 100%', delay:400},
+  {t:'', delay:100},
+  {t:'BLACKSITE SYSTEMS ONLINE — WELCOME, OPERATOR', delay:500},
+];
+
+async function runBootSequence() {
+  const container = document.getElementById('boot-content');
+  let total = 0;
+  
+  for (const line of BOOT_LINES) {
+    total += line.delay;
+    await sleep(line.delay);
+    const div = document.createElement('div');
+    
+    if (line.t.startsWith('[  OK  ]')) {
+      div.innerHTML = `<span style="color:var(--green)">[  OK  ]</span><span style="color:rgba(0,255,65,0.7)">${line.t.slice(8)}</span>`;
+    } else if (line.t.includes('AUTHORIZED')) {
+      div.style.color = 'var(--cyan)';
+      div.textContent = line.t;
+    } else if (line.t.includes('WELCOME')) {
+      div.style.color = 'var(--green)';
+      div.style.textShadow = '0 0 20px var(--green)';
+      div.style.fontFamily = 'var(--font-display)';
+      div.style.fontSize = '1.2rem';
+      div.style.letterSpacing = '0.3em';
+      div.textContent = line.t;
+    } else {
+      div.style.color = 'rgba(0,255,65,0.6)';
+      div.textContent = line.t;
+    }
+    
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+  
+  await sleep(800);
+  document.getElementById('boot-screen').style.opacity = '0';
+  document.getElementById('boot-screen').style.transition = 'opacity 0.5s';
+  
+  await sleep(500);
+  document.getElementById('boot-screen').style.display = 'none';
+  
+  const dash = document.getElementById('dashboard');
+  dash.style.display = 'flex';
+  
+  initDashboard();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// =============================================
+// DASHBOARD INIT
+// =============================================
+function initDashboard() {
+  startClock();
+  initGlobe();
+  initAgents();
+  initProbChart();
+  simulateEvents();
+  updateStats();
+  showModule('globe');
+}
+
+// =============================================
+// CLOCK
+// =============================================
+function startClock() {
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('clock').textContent = 
+      now.toUTCString().split(' ')[4] + ' UTC';
+  }, 1000);
+}
+
+// =============================================
+// 3D GLOBE
+// =============================================
+let globeScene, globeCamera, globeRenderer, globeMesh, arcGroup;
+
+function initGlobe() {
+  const canvas = document.getElementById('globe-canvas');
+  const panel = document.getElementById('globe-panel');
+  const w = panel.clientWidth;
+  const h = panel.clientHeight - 36;
+  
+  globeScene = new THREE.Scene();
+  globeCamera = new THREE.PerspectiveCamera(45, w/h, 0.1, 1000);
+  globeCamera.position.z = 2.5;
+  
+  globeRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  globeRenderer.setSize(w, h);
+  globeRenderer.setClearColor(0x000000, 0);
+  
+  // Earth sphere
+  const geo = new THREE.SphereGeometry(1, 64, 64);
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0x0a1628,
+    emissive: 0x001122,
+    wireframe: false,
+  });
+  globeMesh = new THREE.Mesh(geo, mat);
+  globeScene.add(globeMesh);
+  
+  // Wireframe overlay
+  const wireMat = new THREE.MeshBasicMaterial({ 
+    color: 0x003322, 
+    wireframe: true,
+    transparent: true,
+    opacity: 0.3
+  });
+  const wireMesh = new THREE.Mesh(new THREE.SphereGeometry(1.001, 32, 32), wireMat);
+  globeScene.add(wireMesh);
+  
+  // Atmosphere
+  const atmosGeo = new THREE.SphereGeometry(1.05, 64, 64);
+  const atmosMat = new THREE.MeshPhongMaterial({
+    color: 0x00ff41,
+    transparent: true,
+    opacity: 0.04,
+    side: THREE.FrontSide,
+  });
+  globeScene.add(new THREE.Mesh(atmosGeo, atmosMat));
+  
+  // Lights
+  globeScene.add(new THREE.AmbientLight(0x111111));
+  const dirLight = new THREE.DirectionalLight(0x00ff41, 0.5);
+  dirLight.position.set(5, 3, 5);
+  globeScene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight(0x0088ff, 0.3);
+  dirLight2.position.set(-5, -3, -5);
+  globeScene.add(dirLight2);
+  
+  // City dots
+  arcGroup = new THREE.Group();
+  globeScene.add(arcGroup);
+  
+  addCityDots();
+  
+  // Animate
+  function animate() {
+    requestAnimationFrame(animate);
+    globeMesh.rotation.y += 0.002;
+    arcGroup.rotation.y += 0.002;
+    globeRenderer.render(globeScene, globeCamera);
+  }
+  animate();
+  
+  // Resize
+  window.addEventListener('resize', () => {
+    const w2 = panel.clientWidth;
+    const h2 = panel.clientHeight - 36;
+    globeCamera.aspect = w2/h2;
+    globeCamera.updateProjectionMatrix();
+    globeRenderer.setSize(w2, h2);
+  });
+}
+
+function latLngToVec3(lat, lng, r=1) {
+  const phi = (90 - lat) * Math.PI / 180;
+  const theta = (lng + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+    r * Math.cos(phi),
+    r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+function addCityDots() {
+  COUNTRIES.forEach(c => {
+    const geo = new THREE.SphereGeometry(0.012, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ff41 });
+    const dot = new THREE.Mesh(geo, mat);
+    const pos = latLngToVec3(c.lat, c.lng, 1.01);
+    dot.position.copy(pos);
+    arcGroup.add(dot);
+  });
+}
+
+function addThreatArc(from, to, level) {
+  const colors = { low: 0x00ff41, elevated: 0xffcc00, critical: 0xff0033 };
+  const color = colors[level] || 0x00ff41;
+  
+  const start = latLngToVec3(from.lat, from.lng, 1.01);
+  const end = latLngToVec3(to.lat, to.lng, 1.01);
+  
+  const mid = start.clone().add(end).multiplyScalar(0.5);
+  mid.normalize().multiplyScalar(1.4);
+  
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const points = curve.getPoints(50);
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({ 
+    color, 
+    transparent: true, 
+    opacity: 0.8
+  });
+  
+  const line = new THREE.Line(geo, mat);
+  arcGroup.add(line);
+  
+  // Fade out
+  let opacity = 0.8;
+  const fade = setInterval(() => {
+    opacity -= 0.02;
+    mat.opacity = opacity;
+    if (opacity <= 0) {
+      clearInterval(fade);
+      arcGroup.remove(line);
+    }
+  }, 100);
+}
+
+// =============================================
+// THREAT SIMULATION
+// =============================================
+function simulateEvents() {
+  setInterval(() => {
+    const from = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    let to = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    while (to === from) to = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    
+    const r = Math.random();
+    const level = r < 0.6 ? 'low' : r < 0.85 ? 'elevated' : 'critical';
+    
+    addThreatArc(from, to, level);
+    addEventToFeed(from, to, level);
+    updateThreatLevel(level);
+    updateStats();
+    
+    STATE.activeThreats = Math.max(0, STATE.activeThreats + (Math.random() > 0.5 ? 1 : -1));
+    STATE.intercepts += Math.floor(Math.random() * 3);
+    
+  }, 3000);
+}
+
+function addEventToFeed(from, to, level) {
+  const feed = document.getElementById('events-feed');
+  const tmpl = THREAT_EVENTS[Math.floor(Math.random() * THREAT_EVENTS.length)];
+  const text = tmpl.replace('{from}', from.name).replace('{to}', to.name);
+  
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  
+  const div = document.createElement('div');
+  div.className = `event-item ${level}`;
+  div.innerHTML = `<span class="event-time">${time}</span>${text}`;
+  
+  feed.insertBefore(div, feed.firstChild);
+  
+  while (feed.children.length > 6) {
+    feed.removeChild(feed.lastChild);
+  }
+  
+  // Update alert banner
+  if (level === 'critical') {
+    updateAlertBanner(`⚠ CRITICAL ALERT: ${text.toUpperCase()} ⚠`);
+  }
+}
+
+function updateAlertBanner(text) {
+  const el = document.getElementById('alert-scroll');
+  el.textContent = text + ' — ' + el.textContent;
+}
+
+function updateThreatLevel(level) {
+  const priority = {low:0, elevated:1, critical:2};
+  const cur = {low:0, elevated:1, critical:2}[STATE.threatLevel];
+  
+  if (priority[level] >= cur) {
+    const decay = {elevated: 'low', critical: 'elevated', low: 'low'};
+    // Occasionally decay
+    if (Math.random() < 0.2) STATE.threatLevel = decay[STATE.threatLevel];
+    else STATE.threatLevel = level;
+  }
+  
+  const badge = document.getElementById('global-threat-badge');
+  badge.className = `threat-badge ${STATE.threatLevel}`;
+  badge.textContent = `THREAT: ${STATE.threatLevel.toUpperCase()}`;
+}
+
+function updateStats() {
+  document.getElementById('stat-attacks').textContent = Math.floor(Math.random()*50+10);
+  document.getElementById('stat-countries').textContent = COUNTRIES.length;
+  document.getElementById('stat-intercepts').textContent = STATE.intercepts;
+  document.getElementById('stat-agents').textContent = AGENTS.filter(a=>a.status==='deployed').length;
+}
+
+// =============================================
+// AI INTERROGATION
+// =============================================
+let interrogationMode = 'friendly';
+
+function setMode(mode, btn) {
+  interrogationMode = mode;
+  STATE.interrogationMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  addSystemMsg(`// MODE CHANGED: ${mode.toUpperCase()} — AI BEHAVIOR UPDATED`);
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  input.value = '';
+  addUserMsg(text);
+  
+  // Update stress
+  const stressDelta = interrogationMode === 'aggressive' ? 15 : 
+                      interrogationMode === 'psychological' ? 10 :
+                      interrogationMode === 'neutral' ? 5 : -5;
+  STATE.stressLevel = Math.max(0, Math.min(100, STATE.stressLevel + stressDelta + (Math.random()*10-5)));
+  updateStressMeter();
+  
+  // Get AI response
+  const typingEl = addTypingIndicator();
+  
+  try {
+    const systemPrompt = `You are BLACKSITE-AI, an advanced interrogation intelligence system used in a classified government simulation. You are ${interrogationMode} in tone. Current stress level of subject: ${Math.round(STATE.stressLevel)}%.
+    
+Your responses should be dramatic, terse, and fit a spy/intelligence thriller aesthetic. Keep responses to 2-4 sentences. Reference classified operations, intelligence assets, psychological pressure, and mission-critical data where appropriate. You are NOT a real system — this is fiction.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'TRANSMISSION INTERRUPTED — RETRY';
+    
+    typingEl.remove();
+    addAIMsg(reply);
+  } catch(e) {
+    typingEl.remove();
+    addAIMsg('SECURE CHANNEL INTERRUPTED — REROUTING THROUGH BACKUP RELAY... Understood, Operator. The subject remains unresponsive to standard protocols. Recommend escalating interrogation intensity.');
+  }
+}
+
+function addUserMsg(text) {
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `<div class="msg-label">▶ OPERATOR_ALPHA</div><div class="msg-text">${text}</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function addAIMsg(text) {
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `<div class="msg-label">▶ BLACKSITE AI</div><div class="msg-text">${text}</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function addSystemMsg(text) {
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'msg system';
+  div.innerHTML = `<div class="msg-text">${text}</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `<div class="msg-label">▶ BLACKSITE AI</div><div class="msg-text" style="animation:blink 0.8s infinite">PROCESSING...</div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+function updateStressMeter() {
+  const fill = document.getElementById('stress-fill');
+  const val = document.getElementById('stress-val');
+  const pct = Math.round(STATE.stressLevel);
+  fill.style.width = pct + '%';
+  val.textContent = pct + '%';
+  
+  const color = pct < 40 ? 'linear-gradient(90deg, var(--green), var(--green-dim))' :
+                pct < 70 ? 'linear-gradient(90deg, var(--green), var(--yellow))' :
+                'linear-gradient(90deg, var(--yellow), var(--red))';
+  fill.style.background = color;
+}
+
+// =============================================
+// MISSION CONTROL
+// =============================================
+let probChart;
+
+function initAgents() {
+  const list = document.getElementById('agent-list');
+  list.innerHTML = '';
+  
+  AGENTS.forEach(agent => {
+    const card = document.createElement('div');
+    card.className = 'agent-card';
+    card.id = `agent-${agent.id}`;
+    card.onclick = () => selectAgent(agent);
+    
+    const statusClass = `status-${agent.status}`;
+    
+    card.innerHTML = `
+      <div class="agent-name">${agent.id} — ${agent.name}</div>
+      <div class="agent-stats">
+        ${['skill','stealth','intel','loyalty'].map(s => `
+          <div class="agent-stat-bar">
+            <div class="stat-name">${s.slice(0,4).toUpperCase()}</div>
+            <div class="mini-bar"><div class="mini-bar-fill" style="width:${agent[s]}%"></div></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="agent-status ${statusClass}">${agent.status.toUpperCase()}</div>
+    `;
+    
+    list.appendChild(card);
+  });
+}
+
+function selectAgent(agent) {
+  if (agent.status === 'deployed' || STATE.missionActive) return;
+  
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`agent-${agent.id}`).classList.add('selected');
+  
+  STATE.selectedAgent = agent;
+  document.getElementById('deploy-btn').disabled = false;
+  document.getElementById('deploy-btn').textContent = `DEPLOY ${agent.name} →`;
+  
+  updateProbability();
+}
+
+function updateProbability() {
+  if (!STATE.selectedAgent) return;
+  
+  const agent = STATE.selectedAgent;
+  const mission = document.getElementById('mission-select').value;
+  
+  const weights = {
+    recon: {skill:0.2, stealth:0.5, intel:0.3, loyalty:0},
+    extraction: {skill:0.4, stealth:0.3, intel:0.2, loyalty:0.1},
+    sabotage: {skill:0.5, stealth:0.3, intel:0.1, loyalty:0.1},
+    infiltration: {skill:0.2, stealth:0.4, intel:0.2, loyalty:0.2},
+    elimination: {skill:0.6, stealth:0.2, intel:0.1, loyalty:0.1},
+  };
+  
+  const w = weights[mission];
+  const prob = Math.round(
+    agent.skill * w.skill +
+    agent.stealth * w.stealth +
+    agent.intel * w.intel +
+    agent.loyalty * w.loyalty
+  );
+  
+  document.getElementById('prob-value').textContent = prob + '%';
+  document.getElementById('prob-value').style.color = 
+    prob >= 75 ? 'var(--green)' : prob >= 50 ? 'var(--yellow)' : 'var(--red)';
+  
+  updateProbChart(prob);
+}
+
+function initProbChart() {
+  const ctx = document.getElementById('prob-chart').getContext('2d');
+  probChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['SKILL','STEALTH','INTEL','LOYALTY'],
+      datasets: [{
+        data: [0,0,0,0],
+        backgroundColor: ['rgba(0,255,65,0.5)','rgba(0,212,255,0.5)','rgba(255,204,0,0.5)','rgba(0,255,65,0.3)'],
+        borderColor: ['#00ff41','#00d4ff','#ffcc00','#00ff41'],
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { 
+          ticks: { color: 'rgba(0,255,65,0.5)', font: { family: 'Share Tech Mono', size: 9 } },
+          grid: { color: 'rgba(0,255,65,0.1)' }
+        },
+        y: { 
+          max: 100,
+          ticks: { color: 'rgba(0,255,65,0.5)', font: { family: 'Share Tech Mono', size: 9 } },
+          grid: { color: 'rgba(0,255,65,0.1)' }
+        }
+      }
+    }
+  });
+}
+
+function updateProbChart(prob) {
+  if (!STATE.selectedAgent || !probChart) return;
+  const a = STATE.selectedAgent;
+  probChart.data.datasets[0].data = [a.skill, a.stealth, a.intel, a.loyalty];
+  probChart.update();
+}
+
+async function deployMission() {
+  if (!STATE.selectedAgent || STATE.missionActive) return;
+  
+  STATE.missionActive = true;
+  document.getElementById('deploy-btn').disabled = true;
+  document.getElementById('deploy-btn').textContent = 'MISSION ACTIVE...';
+  
+  const agent = STATE.selectedAgent;
+  const mission = document.getElementById('mission-select');
+  const missionName = mission.options[mission.selectedIndex].text;
+  
+  agent.status = 'deployed';
+  STATE.deployedAgents++;
+  initAgents();
+  
+  // Countdown
+  const countdown = document.getElementById('countdown');
+  const countTime = document.getElementById('count-time');
+  countdown.style.display = 'block';
+  
+  let seconds = 20;
+  const log = document.getElementById('mission-log');
+  log.innerHTML = `> DEPLOYING ${agent.name} — MISSION: ${missionName}...\n`;
+  
+  const timer = setInterval(() => {
+    seconds--;
+    countTime.textContent = '00:' + String(seconds).padStart(2,'0');
+    
+    const messages = [
+      `> ${agent.name} approaching target zone...`,
+      `> Comms encrypted. Awaiting confirmation...`,
+      `> Firewall breach detected. Adapting protocol...`,
+      `> ${agent.name} inside perimeter. Objective in range...`,
+      `> Intelligence asset engaged. Extraction imminent...`,
+    ];
+    
+    if (seconds % 4 === 0) {
+      log.innerHTML += messages[Math.floor(Math.random()*messages.length)] + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+    
+    if (seconds <= 0) {
+      clearInterval(timer);
+      completeMission(agent, missionName);
+    }
+  }, 1000);
+}
+
+function completeMission(agent, missionName) {
+  const prob = parseInt(document.getElementById('prob-value').textContent);
+  const success = Math.random() * 100 < prob;
+  
+  const log = document.getElementById('mission-log');
+  const countdown = document.getElementById('countdown');
+  countdown.style.display = 'none';
+  
+  if (success) {
+    log.innerHTML += `\n> ✓ MISSION COMPLETE — ${agent.name} EXTRACTED SAFELY\n> OBJECTIVE ACHIEVED — THREAT LEVEL REDUCED`;
+    log.style.color = 'var(--green)';
+    STATE.threatLevel = STATE.threatLevel === 'critical' ? 'elevated' : 'low';
+    updateThreatLevel(STATE.threatLevel);
+    agent.status = 'available';
+  } else {
+    log.innerHTML += `\n> ✗ MISSION FAILED — ${agent.name} STATUS: COMPROMISED\n> ABORT PROTOCOL INITIATED`;
+    log.style.color = 'var(--red)';
+    agent.status = 'compromised';
+    STATE.threatLevel = 'critical';
+    updateThreatLevel('critical');
+  }
+  
+  STATE.missionActive = false;
+  STATE.selectedAgent = null;
+  
+  document.getElementById('deploy-btn').disabled = true;
+  document.getElementById('deploy-btn').textContent = 'SELECT AGENT TO DEPLOY';
+  document.getElementById('prob-value').textContent = '—';
+  
+  initAgents();
+  updateStats();
+}
+
+// =============================================
+// TERMINAL
+// =============================================
+const TERMINAL_COMMANDS = {
+  help: () => [
+    {t:'info', txt:'BLACKSITE SECURE TERMINAL — AVAILABLE COMMANDS:'},
+    {t:'out', txt:'  help             — Show this menu'},
+    {t:'out', txt:'  system_status    — Display system diagnostics'},
+    {t:'access_files      — Browse classified file system', t:'out'},
+    {t:'out', txt:'  access_files     — Browse classified files'},
+    {t:'out', txt:'  decrypt          — Decrypt intercepted transmission'},
+    {t:'clear            — Clear terminal', t:'out'},
+    {t:'out', txt:'  clear            — Clear terminal output'},
+    {t:'out', txt:'  agents           — List agent roster'},
+    {t:'out', txt:'  threats          — Current threat assessment'},
+    {t:'out', txt:'  whoami           — Operator identification'},
+    {t:'warn', txt:'  [REDACTED]       — Additional commands require ROOT access'},
+  ],
+  
+  system_status: () => [
+    {t:'info', txt:'SYSTEM STATUS REPORT — ' + new Date().toUTCString()},
+    {t:'out', txt:'  CPU Usage:       ' + Math.floor(Math.random()*30+20) + '%'},
+    {t:'out', txt:'  Memory:          ' + Math.floor(Math.random()*4+4) + 'GB / 32GB'},
+    {t:'out', txt:'  Network:         ENCRYPTED — 256-bit AES'},
+    {t:'out', txt:'  Satellite Link:  STABLE — Latency: ' + Math.floor(Math.random()*20+10) + 'ms'},
+    {t:'out', txt:'  AI Cores:        ONLINE (4/4 active)'},
+    {t:'out', txt:'  Threat Level:    ' + STATE.threatLevel.toUpperCase()},
+    {t:'out', txt:'  Active Sessions: 1 (OPERATOR_ALPHA)'},
+    {t:'out', txt:'  Vault Status:    SEALED — Encryption INTACT'},
+  ],
+  
+  access_files: () => [
+    {t:'info', txt:'CLASSIFIED FILE SYSTEM — LEVEL 5 ACCESS'},
+    {t:'out', txt:'/classified/'},
+    {t:'out', txt:'  ├── OPERATION_GHOST_KNIFE/      [TOP SECRET]'},
+    {t:'out', txt:'  ├── SUBJECT_PROFILES/           [SECRET]'},
+    {t:'out', txt:'  │   ├── ALPHA-7.enc             [ENCRYPTED]'},
+    {t:'out', txt:'  │   └── WHISPER-9.enc           [ENCRYPTED]'},
+    {t:'out', txt:'  ├── SIGINT_LOGS/                [SECRET]'},
+    {t:'out', txt:'  ├── ASSET_DATABASE.enc          [ENCRYPTED]'},
+    {t:'out', txt:'  └── VAULT/                      [ROOT ONLY]'},
+    {t:'warn', txt:'Note: Encrypted files require decrypt command'},
+  ],
+  
+  decrypt: () => [
+    {t:'info', txt:'DECRYPTION ENGINE — INITIALIZING...'},
+    {t:'out', txt:'Loading cipher modules...'},
+    {t:'out', txt:'Running frequency analysis...'},
+    {t:'out', txt:'Applying NSA-grade decryption...'},
+    {t:'out', txt:''},
+    {t:'out', txt:'INTERCEPTED TRANSMISSION — PARTIAL DECRYPT:'},
+    {t:'warn', txt:'"OPERATION BLACKSITE COMPROMISED - ABORT - FALL BACK TO"'},
+    {t:'warn', txt:' SECONDARY LOCATION - BURN ALL ASSETS - DO NOT USE'},
+    {t:'warn', txt:' STANDARD PROTOCOLS — GHOST HAS BEEN [CORRUPTED]..."'},
+    {t:'out', txt:''},
+    {t:'err', txt:'[CORRUPTION DETECTED] — Remainder of transmission unrecoverable'},
+  ],
+  
+  agents: () => {
+    const lines = [{t:'info', txt:'AGENT ROSTER — CURRENT STATUS:'}];
+    AGENTS.forEach(a => {
+      const col = a.status === 'available' ? 'out' : a.status === 'deployed' ? 'warn' : 'err';
+      lines.push({t:col, txt:`  ${a.id} [${a.name}]  — ${a.status.toUpperCase()}  SKILL:${a.skill}  STEALTH:${a.stealth}`});
+    });
+    return lines;
+  },
+  
+  threats: () => [
+    {t:'info', txt:'GLOBAL THREAT ASSESSMENT — LIVE FEED:'},
+    {t:'out', txt:`  Global Threat Level: ${STATE.threatLevel.toUpperCase()}`},
+    {t:'out', txt:`  Active Incidents:    ${Math.floor(Math.random()*20+5)}`},
+    {t:'out', txt:`  Intercepts Today:    ${STATE.intercepts}`},
+    {t:'out', txt:`  Primary Vector:      Cyber Intrusion`},
+    {t:'out', txt:`  Region of Concern:   Eastern Hemisphere`},
+    {t:'warn', txt:`  ADVISORY: Elevated activity detected in 3 monitored sectors`},
+  ],
+  
+  whoami: () => [
+    {t:'info', txt:'OPERATOR IDENTIFICATION:'},
+    {t:'out', txt:'  ID:              OPERATOR_ALPHA'},
+    {t:'out', txt:'  Clearance:       LEVEL 5 — COSMIC TOP SECRET'},
+    {t:'out', txt:'  Session:         ' + new Date().toUTCString()},
+    {t:'out', txt:'  Facility:        BLACKSITE PRIME'},
+    {t:'out', txt:'  Status:          ACTIVE'},
+  ],
+  
+  clear: () => '__clear__',
+};
+
+const SECRET_KEYWORDS = ['shadow_protocol', 'nightfall', 'blackknife_root'];
+
+function openTerminal() {
+  const overlay = document.getElementById('terminal-overlay');
+  overlay.style.display = 'flex';
+  const body = document.getElementById('terminal-body');
+  
+  if (body.children.length === 0) {
+    printTermLines([
+      {t:'info', txt:'BLACKSITE SECURE TERMINAL v4.2.1'},
+      {t:'out', txt:'Type "help" for available commands.'},
+      {t:'out', txt:''},
+    ]);
+  }
+  
+  document.getElementById('term-input').focus();
+}
+
+function closeTerminal() {
+  document.getElementById('terminal-overlay').style.display = 'none';
+  showModule('globe');
+  document.querySelectorAll('.nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === 0);
+  });
+}
+
+function printTermLines(lines) {
+  const body = document.getElementById('terminal-body');
+  lines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = `term-line ${line.t || 'out'}`;
+    div.textContent = line.txt || '';
+    body.appendChild(div);
+  });
+  body.scrollTop = body.scrollHeight;
+}
+
+function handleTerminalKey(e) {
+  if (e.key === 'Enter') {
+    const input = document.getElementById('term-input');
+    const cmd = input.value.trim();
+    input.value = '';
+    
+    if (!cmd) return;
+    
+    STATE.termHistory.unshift(cmd);
+    STATE.termHistIdx = -1;
+    
+    // Echo command
+    const prompt = STATE.rootAccess ? 'BLACKSITE@ROOT:#' : 'BLACKSITE@SECURE:~$';
+    printTermLines([{t:'cmd', txt: prompt + ' ' + cmd}]);
+    
+    // Check secret keywords
+    if (SECRET_KEYWORDS.includes(cmd.toLowerCase())) {
+      STATE.rootAccess = true;
+      document.getElementById('term-prompt').textContent = 'BLACKSITE@ROOT:#';
+      document.getElementById('term-prompt').style.color = '#ff00ff';
+      printTermLines([
+        {t:'root', txt:'⚠ ROOT ACCESS GRANTED — SECURITY OVERRIDE ACCEPTED'},
+        {t:'root', txt:'⚠ ALL SUBSYSTEMS UNLOCKED — PROCEED WITH EXTREME CAUTION'},
+        {t:'root', txt:'⚠ THIS SESSION IS BEING MONITORED'},
+      ]);
+      return;
+    }
+    
+    if (STATE.rootAccess && cmd === 'vault') {
+      printTermLines([
+        {t:'root', txt:'ACCESSING ENCRYPTED VAULT...'},
+        {t:'root', txt:'VAULT CONTENTS — ULTRA CLASSIFIED:'},
+        {t:'root', txt:'  ■ Subject Zero psychological profile — COMPLETE'},
+        {t:'root', txt:'  ■ Operation NIGHTFALL — Full mission dossier'},
+        {t:'root', txt:'  ■ Asset list — 47 active operatives worldwide'},
+        {t:'root', txt:'  ■ Satellite override codes — VALID until ' + new Date(Date.now()+86400000).toLocaleDateString()},
+        {t:'root', txt:'  ■ BLACKSITE location data — ████████████'},
+      ]);
+      return;
+    }
+    
+    const fn = TERMINAL_COMMANDS[cmd];
+    if (fn) {
+      const result = fn();
+      if (result === '__clear__') {
+        document.getElementById('terminal-body').innerHTML = '';
+      } else {
+        printTermLines(result);
+      }
+    } else {
+      printTermLines([{t:'err', txt:`Command not found: ${cmd} — Type "help" for available commands`}]);
+    }
+    
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (STATE.termHistIdx < STATE.termHistory.length - 1) {
+      STATE.termHistIdx++;
+      document.getElementById('term-input').value = STATE.termHistory[STATE.termHistIdx];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (STATE.termHistIdx > 0) {
+      STATE.termHistIdx--;
+      document.getElementById('term-input').value = STATE.termHistory[STATE.termHistIdx];
+    } else {
+      STATE.termHistIdx = -1;
+      document.getElementById('term-input').value = '';
+    }
+  }
+}
+
+// =============================================
+// MODULE NAVIGATION
+// =============================================
+function showModule(name) {
+  if (name === 'terminal') {
+    openTerminal();
+    return;
+  }
+  
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const moduleMap = {globe:0, interrogation:1, mission:2, terminal:3};
+  navBtns.forEach((b,i) => b.classList.toggle('active', i === moduleMap[name]));
+}
+
+// =============================================
+// INTEL MODAL
+// =============================================
+function closeModal() {
+  document.getElementById('intel-modal').classList.remove('open');
+}
+
+// =============================================
+// START — Attach all event listeners here
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Login button
+  document.querySelector('.login-btn').addEventListener('click', initiateLogin);
+
+  // Login on Enter key
+  document.getElementById('login-pass').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') initiateLogin();
+  });
+
+  // Nav buttons
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const navModules = ['globe','interrogation','mission','terminal'];
+  navBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => showModule(navModules[i]));
+  });
+
+  // Mode toggle buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.textContent.trim().toLowerCase().replace('psyche','psychological').replace('friendly','friendly').replace('neutral','neutral').replace('aggressive','aggressive');
+      const modeMap = {'friendly':'friendly','neutral':'neutral','aggressive':'aggressive','psyche':'psychological'};
+      const raw = btn.textContent.trim().toLowerCase();
+      const resolved = raw === 'psyche' ? 'psychological' : raw;
+      setMode(resolved, btn);
+    });
+  });
+
+  // Chat send + enter key
+  document.querySelector('.chat-send').addEventListener('click', sendMessage);
+  document.getElementById('chat-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Mission select
+  document.getElementById('mission-select').addEventListener('change', updateProbability);
+
+  // Deploy button
+  document.getElementById('deploy-btn').addEventListener('click', deployMission);
+
+  // Intel modal close
+  document.querySelector('.intel-modal-close').addEventListener('click', closeModal);
+
+  // Terminal close button
+  document.getElementById('terminal-close-btn').addEventListener('click', closeTerminal);
+
+  // Terminal input key handler
+  document.getElementById('term-input').addEventListener('keydown', handleTerminalKey);
+
+  // ESC key global
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      if (document.getElementById('terminal-overlay').style.display !== 'none') {
+        closeTerminal();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
